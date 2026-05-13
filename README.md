@@ -1,7 +1,7 @@
 # FlatStore
 
 FlatStore is a modern application store built with React and Electron. It provides a clean and intuitive interface for discovering and managing applications.
-
+(this is a wrapper for the entire flubhub repo so you dont have to visit the site)
 ## Features
 
 - **App Discovery:** Browse a curated list of applications.
