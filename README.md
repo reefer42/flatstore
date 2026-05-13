@@ -2,6 +2,9 @@
 
 FlatStore is a modern application store built with React and Electron. It provides a clean and intuitive interface for discovering and managing applications.
 (this is a wrapper for the entire flathub repo so you dont have to visit the site)
+
+<img width="2560" height="1600" alt="Screenshot_20260513_121117" src="https://github.com/user-attachments/assets/45925f4a-4c19-408f-af56-a8b3e1214b38" />
+
 ## Features
 
 - **App Discovery:** Browse a curated list of applications.
