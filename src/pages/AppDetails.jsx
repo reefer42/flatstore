@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, TerminalSquare, Loader2, Globe, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowLeft, Download, ExternalLink, ShieldCheck } from 'lucide-react';
 
 function AppDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const data = await window.api.getAppDetails(id);
-        setApp(data);
+        const response = await window.api.getAppDetails(id);
+        setApp(response);
       } catch (err) {
-        setError('Failed to load app details.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -24,105 +24,129 @@ function AppDetails() {
   }, [id]);
 
   const handleInstall = async () => {
+    setInstalling(true);
     try {
       await window.api.installApp(id);
     } catch (err) {
-      console.error(err);
+      alert('Installation failed: ' + err);
+    } finally {
+      setInstalling(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-10 h-10 animate-spin text-[#48b9c7]" />
       </div>
     );
   }
 
-  if (error || !app) {
-    return (
-      <div className="text-center text-red-500 p-8">
-        <p>{error || 'App not found'}</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-blue-500 hover:underline">
-          Go Back
-        </button>
-      </div>
-    );
-  }
+  if (!app) return <div className="p-8 text-center">App not found</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto p-8 animate-in fade-in duration-500">
       <button 
-        onClick={() => navigate(-1)} 
-        className="flex items-center gap-2 text-gray-600 hover:text-blue-500 mb-8 transition-colors"
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-gray-400 hover:text-[#48b9c7] transition-colors mb-8 group"
       >
-        <ArrowLeft className="w-5 h-5" /> Back
+        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <span>Back</span>
       </button>
 
-      <div className="flex flex-col md:flex-row gap-8 mb-12">
+      <div className="flex flex-col md:flex-row gap-10 mb-12">
         <img 
           src={app.icon || 'https://dl.flathub.org/media/icons/128x128/org.freedesktop.Platform.png'} 
           alt={app.name} 
-          className="w-32 h-32 rounded-3xl object-cover shadow-sm bg-gray-50 flex-shrink-0"
-          onError={(e) => { e.target.src = 'https://dl.flathub.org/media/icons/128x128/org.freedesktop.Platform.png'; }}
+          className="w-32 h-32 md:w-48 md:h-48 rounded-3xl bg-[#242424] p-4 shadow-2xl"
         />
         
-        <div className="flex-1">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">{app.name}</h1>
-          <p className="text-xl text-gray-600 mb-4">{app.summary}</p>
-          
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
-            <span className="font-medium text-gray-700">{app.developer_name}</span>
-            {app.metadata && app.metadata['flathub::verification::verified'] === true && (
-              <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                <ShieldCheck className="w-4 h-4" /> Verified
-              </span>
-            )}
-            {app.urls && app.urls.homepage && (
-              <a href={app.urls.homepage} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-blue-500">
-                <Globe className="w-4 h-4" /> Website
-              </a>
-            )}
+        <div className="flex-1 flex flex-col">
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold text-white mb-2">{app.name}</h1>
+            <p className="text-lg text-gray-400">{app.summary}</p>
           </div>
 
-          <button 
-            onClick={handleInstall}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg"
-          >
-            <TerminalSquare className="w-5 h-5" />
-            Install via Flatpak
-          </button>
+          <div className="flex items-center gap-4 mt-auto">
+            <button 
+              onClick={handleInstall}
+              disabled={installing}
+              className="flex items-center gap-2 px-8 py-3 bg-[#48b9c7] hover:bg-[#3a939e] text-white rounded-lg font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            >
+              {installing ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                <Download size={20} />
+              )}
+              {installing ? 'Installing...' : 'Install'}
+            </button>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#242424] text-[#48b9c7] rounded-md text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck size={14} />
+              Verified
+            </div>
+          </div>
         </div>
       </div>
 
-      {app.screenshots && app.screenshots.length > 0 && (
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Screenshots</h2>
-          <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
-            {app.screenshots.map((shot, index) => {
-              // Find the largest size or default
-              const imgSize = shot.sizes.find(s => s.width >= 600) || shot.sizes[0];
-              if (!imgSize) return null;
-              
-              return (
-                <img 
-                  key={index} 
-                  src={imgSize.src} 
-                  alt="Screenshot" 
-                  className="h-64 md:h-80 w-auto rounded-xl shadow-md object-cover snap-center border border-gray-200"
-                />
-              );
-            })}
+      {/* Description */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-8">
+          <section>
+            <h2 className="text-xl font-bold mb-4">About this application</h2>
+            <div 
+              className="text-gray-300 leading-relaxed space-y-4"
+              dangerouslySetInnerHTML={{ __html: app.description }}
+            />
+          </section>
+
+          {app.screenshots && app.screenshots.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold mb-4">Screenshots</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {app.screenshots.slice(0, 3).map((s, i) => (
+                  <img 
+                    key={i}
+                    src={s.sizes?.[0]?.src} 
+                    className="rounded-xl border border-[#242424] w-full shadow-lg"
+                    alt="Screenshot"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Sidebar Info */}
+        <div className="space-y-6">
+          <div className="bg-[#242424] rounded-xl p-6 border border-[#1a1a1a]">
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Details</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500">Developer</p>
+                <p className="text-sm text-white">{app.developer_name || 'Community'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">License</p>
+                <p className="text-sm text-white">{app.project_license || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Category</p>
+                <p className="text-sm text-white">{app.categories?.[0] || 'Utility'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <button className="flex items-center justify-between px-4 py-3 bg-[#242424] hover:bg-[#3d3d3d] rounded-lg transition-colors group">
+              <span className="text-sm">Website</span>
+              <ExternalLink size={16} className="text-gray-500 group-hover:text-[#48b9c7]" />
+            </button>
+            <button className="flex items-center justify-between px-4 py-3 bg-[#242424] hover:bg-[#3d3d3d] rounded-lg transition-colors group">
+              <span className="text-sm">Help</span>
+              <ExternalLink size={16} className="text-gray-500 group-hover:text-[#48b9c7]" />
+            </button>
           </div>
         </div>
-      )}
-
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-        <div 
-          className="prose prose-blue max-w-none text-gray-700 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: app.description || 'No description available.' }}
-        />
       </div>
     </div>
   );

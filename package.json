@@ -35,6 +35,12 @@
     "directories": {
       "output": "dist-electron"
     },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
     "linux": {
       "target": [
         "AppImage",

@@ -7,8 +7,9 @@ const FLATHUB_API = 'https://flathub.org/api/v2';
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1100,
-    height: 800,
+    width: 1200,
+    height: 850,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
